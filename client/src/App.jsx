@@ -26,7 +26,9 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? `${window.location.protocol}//${window.location.hostname}:3000/api`
+  : '/api';
 
 // Reusable stateful image component that renders a fallback on loading errors
 function SafeImage({ src, alt, className, style, fallbackTitle, fallbackYear }) {

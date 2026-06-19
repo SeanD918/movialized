@@ -4,7 +4,27 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'data.json');
+const DB_PATH = process.env.VERCEL
+    ? '/tmp/data.json'
+    : path.join(__dirname, 'data.json');
+
+// Copy original database template to /tmp on Vercel for write operations
+if (process.env.VERCEL) {
+    const originalDbPath = path.join(__dirname, 'data.json');
+    if (!fs.existsSync(DB_PATH)) {
+        try {
+            if (fs.existsSync(originalDbPath)) {
+                fs.copyFileSync(originalDbPath, DB_PATH);
+                console.log('Copied database to /tmp for Vercel execution.');
+            } else {
+                fs.writeFileSync(DB_PATH, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2), 'utf8');
+                console.log('Initialized empty database in /tmp for Vercel execution.');
+            }
+        } catch (err) {
+            console.error('Failed to copy database to /tmp:', err);
+        }
+    }
+}
 
 // Custom CORS middleware to avoid external npm dependency
 app.use((req, res, next) => {
@@ -1336,6 +1356,10 @@ app.get('/', (req, res) => {
     res.json({ status: "running", api: "/api", app: "Movialized Movie Platform" });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
