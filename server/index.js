@@ -10,18 +10,19 @@ const DB_PATH = process.env.VERCEL
 
 // Copy original database template to /tmp on Vercel for write operations
 if (process.env.VERCEL) {
-    const originalDbPath = path.join(__dirname, 'data.json');
     if (!fs.existsSync(DB_PATH)) {
         try {
-            if (fs.existsSync(originalDbPath)) {
-                fs.copyFileSync(originalDbPath, DB_PATH);
-                console.log('Copied database to /tmp for Vercel execution.');
-            } else {
-                fs.writeFileSync(DB_PATH, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2), 'utf8');
-                console.log('Initialized empty database in /tmp for Vercel execution.');
-            }
+            const initialData = require('./data.json');
+            fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf8');
+            console.log('Copied database to /tmp for Vercel execution.');
         } catch (err) {
             console.error('Failed to copy database to /tmp:', err);
+            try {
+                fs.writeFileSync(DB_PATH, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2), 'utf8');
+                console.log('Initialized empty database in /tmp after fallback.');
+            } catch (writeErr) {
+                console.error('Failed to write empty database:', writeErr);
+            }
         }
     }
 }
