@@ -62,6 +62,13 @@ const readDB = () => {
         }
         const parsed = JSON.parse(data);
         if (!parsed.users) parsed.users = [];
+        if (!parsed.movies || parsed.movies.length === 0) {
+            seedDatabase();
+            const reReadData = fs.readFileSync(DB_PATH, 'utf8');
+            const reParsed = JSON.parse(reReadData);
+            if (!reParsed.users) reParsed.users = [];
+            return reParsed;
+        }
         return parsed;
     } catch (err) {
         console.error('Error reading database (attempting auto-recovery by re-seeding):', err);
@@ -1349,16 +1356,6 @@ app.put('/api/profile', (req, res) => {
     }
 });
 
-// Debug API fallback route
-app.use('/api/*', (req, res) => {
-    res.json({
-        msg: "Fallback debug route inside Express",
-        url: req.url,
-        originalUrl: req.originalUrl,
-        path: req.path,
-        headers: req.headers
-    });
-});
 
 // Default server status route
 app.get('/', (req, res) => {
