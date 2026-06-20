@@ -157,7 +157,7 @@ const ScrollZoomHero = ({ title, subtitle, image }) => {
 
 function App() {
   // Navigation Routing State
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('discover');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // User Authentication State
@@ -280,7 +280,7 @@ function App() {
       } else if (['dashboard', 'discover', 'diary', 'lists'].includes(hash)) {
         setActiveTab(hash);
       } else {
-        setActiveTab('dashboard'); // fallback
+        setActiveTab('discover'); // fallback
       }
     };
 

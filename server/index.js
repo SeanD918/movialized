@@ -49,6 +49,92 @@ const backupCorruptDB = () => {
     }
 };
 
+const migratePosters = (db) => {
+    let updated = false;
+    const corrections = {
+        "https://image.tmdb.org/t/p/w500/9gk7adHYeZCEhKjSRt32WD31568.jpg": "https://image.tmdb.org/t/p/w500/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+        "https://image.tmdb.org/t/p/w500/gEU2QvHOmihvJv7VigwE4w2UpI.jpg": "https://image.tmdb.org/t/p/w500/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+        "https://image.tmdb.org/t/p/w500/qJ2tWw754Gvj67a2B3zTyRBrA24.jpg": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+        "https://image.tmdb.org/t/p/w500/d5iil4FJmye00uUi5cyN79goJe5.jpg": "https://image.tmdb.org/t/p/w500/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
+        "https://image.tmdb.org/t/p/w500/9cqN002GmqKjK79pypmUzrV6JtC.jpg": "https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
+        "https://image.tmdb.org/t/p/w500/pB8BM7rnZHsZ52hqgQL6go0yZCc.jpg": "https://image.tmdb.org/t/p/w500/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg",
+        "https://image.tmdb.org/t/p/w500/f89U3wzqrjVnH50TYsyevfwgTMn.jpg": "https://image.tmdb.org/t/p/w500/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg",
+        "https://image.tmdb.org/t/p/w500/393mh1e064FiyKs8mEN2kgXN9wt.jpg": "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+        "https://image.tmdb.org/t/p/w500/7IiTT05EX2u6N6K1g2tJcczQI7Z.jpg": "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        "https://image.tmdb.org/t/p/w500/7fn624j5lh35n2n2t4hy2kvO6vV.jpg": "https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+        "https://image.tmdb.org/t/p/w500/iiZZN643n6bg6ZD2iR1wN2Zg07q.jpg": "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
+        "https://image.tmdb.org/t/p/w500/39wmItIWsg5sclfg2zZJZvHqhg0.jpg": "https://image.tmdb.org/t/p/w500/u68AjlvlutfEIcpmbYpKcdi09ut.jpg",
+        "https://image.tmdb.org/t/p/w500/czemb36gZ229292n38392ue5w2X.jpg": "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+        "https://image.tmdb.org/t/p/w500/8VtB7v9mCV1X61CF4m4jA0PsnUo.jpg": "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+        "https://image.tmdb.org/t/p/w500/ty8hDCcc4gq52Bptmlm1bfz7n8c.jpg": "https://image.tmdb.org/t/p/w500/wN2xWp1eIwCKOD0BHTcErTBv1Uq.jpg",
+        "https://image.tmdb.org/t/p/w500/3bhkrj6UGV2pa6IKMBptwU2u6tc.jpg": "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+        "https://image.tmdb.org/t/p/w500/6oom5QDNv285P5PFmMIkQIwEEAz.jpg": "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+        "https://image.tmdb.org/t/p/w500/nBesb4j1df7G2365Z52gIv6Hgbz.jpg": "https://image.tmdb.org/t/p/w500/nNAeTmF4CtdSgMDplXTDPOpYzsX.jpg",
+        "https://image.tmdb.org/t/p/w500/arw2vEZvH6UYie96vG879ftR5G3.jpg": "https://image.tmdb.org/t/p/w500/Cw4hIUIAmSYfK9QfaUW5igp9La.jpg",
+        "https://image.tmdb.org/t/p/w500/6yogwS6q7hBTH04yzwI6SQ14BhC.jpg": "https://image.tmdb.org/t/p/w500/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg",
+        "https://image.tmdb.org/t/p/w500/uS1SkjV5rQIKx4q7nIQqH65G67y.jpg": "https://image.tmdb.org/t/p/w500/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg",
+        "https://image.tmdb.org/t/p/w500/aKuFiU8tClGW5w4QLPMj4O4WV0g.jpg": "https://image.tmdb.org/t/p/w500/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg",
+        "https://image.tmdb.org/t/p/w500/uq41m461gW552E4YxVn197N86g5.jpg": "https://image.tmdb.org/t/p/w500/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
+        "https://image.tmdb.org/t/p/w500/sF1U4EUg0zKSRR42paT7F303h2t.jpg": "https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
+        "https://image.tmdb.org/t/p/w500/81d8oyEFgj7i436m57tfdDIH26B.jpg": "https://image.tmdb.org/t/p/w500/yz4QVqPx3h1hD1DfqqQkCq3rmxW.jpg",
+        "https://image.tmdb.org/t/p/w500/ddZ368oSRox9e2r8J3jWnME9Z3o.jpg": "https://image.tmdb.org/t/p/w500/vuza0WqY239yBXOadKlGwJsZJFE.jpg",
+        "https://image.tmdb.org/t/p/w500/5ywCwIL7LI77O5U4p99n57l4Pev.jpg": "https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg",
+        "https://image.tmdb.org/t/p/w500/fNqz6fe2qw5HZnBvQY746guV5ph.jpg": "https://image.tmdb.org/t/p/w500/vN5B5WgYscRGcQpVhHl6p9DDTP0.jpg",
+        "https://image.tmdb.org/t/p/w500/3as8d15Z57eG9n87Gz3m5tW2tI0.jpg": "https://image.tmdb.org/t/p/w500/nT97ifVT2J1yMQmeq20Qblg61T.jpg",
+        "https://image.tmdb.org/t/p/w500/bdN3gmg4626yBh6WMcb6z51558w.jpg": "https://image.tmdb.org/t/p/w500/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+        "https://image.tmdb.org/t/p/w500/kve201g5zwm68t1v4mR1I4IRZ6Y.jpg": "https://image.tmdb.org/t/p/w500/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg",
+        "https://image.tmdb.org/t/p/w500/gGe540455B0x1lP4l45PeyLA4y4.jpg": "https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+        "https://image.tmdb.org/t/p/w500/8Gxv2wSbsysLYlhuxNx76vSqTRY.jpg": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+        "https://image.tmdb.org/t/p/w500/8HRug3C754162P2469490Pty7t6.jpg": "https://image.tmdb.org/t/p/w500/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
+        "https://image.tmdb.org/t/p/w500/7sfb7hvtjxrIYTR26576bh065ch.jpg": "https://image.tmdb.org/t/p/w500/7sfbEnaARXDDhKm0CZ7D7uc2sbo.jpg",
+        "https://image.tmdb.org/t/p/w500/7oWYwz6H7SR5t7v7n55oUhqOIvi.jpg": "https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg",
+        "https://image.tmdb.org/t/p/w500/8yOH7T5u9fv24b5Pj433Z4Gg1yE.jpg": "https://image.tmdb.org/t/p/w500/6d5XOczc226jECq0LIX0siKtgHR.jpg",
+        "https://image.tmdb.org/t/p/w500/q71tjeZ457584rYjuwHpvRkR3x0.jpg": "https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg",
+        "https://image.tmdb.org/t/p/w500/vfrQ06X3GUGvNu4Rh74a445n5Gt.jpg": "https://image.tmdb.org/t/p/w500/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg",
+        "https://image.tmdb.org/t/p/w500/uDO8zWDhfNsPkNyFI0hm3xxPk6g.jpg": "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
+        "https://image.tmdb.org/t/p/w500/udDclsnH3wFS6r7zA7alUPyN2aB.jpg": "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg"
+    };
+
+    if (db.movies) {
+        db.movies.forEach(m => {
+            if (corrections[m.poster]) {
+                m.poster = corrections[m.poster];
+                updated = true;
+            }
+        });
+    }
+    if (db.logs) {
+        db.logs.forEach(log => {
+            if (log.movie && corrections[log.movie.poster]) {
+                log.movie.poster = corrections[log.movie.poster];
+                updated = true;
+            }
+        });
+    }
+    if (db.lists) {
+        db.lists.forEach(list => {
+            if (list.movies) {
+                list.movies.forEach(m => {
+                    if (corrections[m.poster]) {
+                        m.poster = corrections[m.poster];
+                        updated = true;
+                    }
+                });
+            }
+        });
+    }
+    if (updated) {
+        try {
+            const tempPath = DB_PATH + '.tmp';
+            fs.writeFileSync(tempPath, JSON.stringify(db, null, 2), 'utf8');
+            fs.renameSync(tempPath, DB_PATH);
+        } catch (e) {
+            console.error('Migration write failed:', e);
+        }
+    }
+    return db;
+};
+
 const readDB = () => {
     try {
         if (!fs.existsSync(DB_PATH)) {
@@ -67,9 +153,9 @@ const readDB = () => {
             const reReadData = fs.readFileSync(DB_PATH, 'utf8');
             const reParsed = JSON.parse(reReadData);
             if (!reParsed.users) reParsed.users = [];
-            return reParsed;
+            return migratePosters(reParsed);
         }
-        return parsed;
+        return migratePosters(parsed);
     } catch (err) {
         console.error('Error reading database (attempting auto-recovery by re-seeding):', err);
         try {
@@ -78,7 +164,7 @@ const readDB = () => {
             const data = fs.readFileSync(DB_PATH, 'utf8');
             const parsed = JSON.parse(data);
             if (!parsed.users) parsed.users = [];
-            return parsed;
+            return migratePosters(parsed);
         } catch (recoveryErr) {
             console.error('Critical: Failed to recover database:', recoveryErr);
             return { movies: [], logs: [], lists: [], profile: {}, users: [] };
@@ -108,7 +194,7 @@ const seedDatabase = () => {
             runtime: 148,
             genres: ["Sci-Fi", "Action", "Thriller"],
             synopsis: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-            poster: "https://image.tmdb.org/t/p/w500/9gk7adHYeZCEhKjSRt32WD31568.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
         },
         {
             id: "interstellar",
@@ -119,7 +205,7 @@ const seedDatabase = () => {
             runtime: 169,
             genres: ["Sci-Fi", "Drama", "Adventure"],
             synopsis: "When Earth becomes uninhabitable, a team of explorers travels through a wormhole in space in an attempt to ensure humanity's survival.",
-            poster: "https://image.tmdb.org/t/p/w500/gEU2QvHOmihvJv7VigwE4w2UpI.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
         },
         {
             id: "the-dark-knight",
@@ -130,7 +216,7 @@ const seedDatabase = () => {
             runtime: 152,
             genres: ["Action", "Crime", "Drama"],
             synopsis: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-            poster: "https://image.tmdb.org/t/p/w500/qJ2tWw754Gvj67a2B3zTyRBrA24.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
         },
         {
             id: "pulp-fiction",
@@ -141,7 +227,7 @@ const seedDatabase = () => {
             runtime: 154,
             genres: ["Crime", "Drama"],
             synopsis: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
-            poster: "https://image.tmdb.org/t/p/w500/d5iil4FJmye00uUi5cyN79goJe5.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg"
         },
         {
             id: "the-shawshank-redemption",
@@ -152,7 +238,7 @@ const seedDatabase = () => {
             runtime: 142,
             genres: ["Drama"],
             synopsis: "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
-            poster: "https://image.tmdb.org/t/p/w500/9cqN002GmqKjK79pypmUzrV6JtC.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg"
         },
         {
             id: "fight-club",
@@ -163,7 +249,7 @@ const seedDatabase = () => {
             runtime: 139,
             genres: ["Drama", "Thriller"],
             synopsis: "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into something much, much more.",
-            poster: "https://image.tmdb.org/t/p/w500/pB8BM7rnZHsZ52hqgQL6go0yZCc.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg"
         },
         {
             id: "the-matrix",
@@ -174,7 +260,7 @@ const seedDatabase = () => {
             runtime: 136,
             genres: ["Sci-Fi", "Action"],
             synopsis: "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth--the life he knows is the elaborate deception of an evil cyber-intelligence.",
-            poster: "https://image.tmdb.org/t/p/w500/f89U3wzqrjVnH50TYsyevfwgTMn.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/dXNAPwY7VrqMAo51EKhhCJfaGb5.jpg"
         },
         {
             id: "spirited-away",
@@ -185,7 +271,7 @@ const seedDatabase = () => {
             runtime: 125,
             genres: ["Animation", "Fantasy", "Family"],
             synopsis: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits, and where humans are changed into beasts.",
-            poster: "https://image.tmdb.org/t/p/w500/393mh1e064FiyKs8mEN2kgXN9wt.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg"
         },
         {
             id: "parasite",
@@ -196,7 +282,7 @@ const seedDatabase = () => {
             runtime: 132,
             genres: ["Thriller", "Drama", "Comedy"],
             synopsis: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
-            poster: "https://image.tmdb.org/t/p/w500/7IiTT05EX2u6N6K1g2tJcczQI7Z.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg"
         },
         {
             id: "whiplash",
@@ -207,7 +293,7 @@ const seedDatabase = () => {
             runtime: 107,
             genres: ["Drama", "Music"],
             synopsis: "A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student's potential.",
-            poster: "https://image.tmdb.org/t/p/w500/7fn624j5lh35n2n2t4hy2kvO6vV.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg"
         },
         {
             id: "into-the-spider-verse",
@@ -218,7 +304,7 @@ const seedDatabase = () => {
             runtime: 117,
             genres: ["Animation", "Action", "Sci-Fi"],
             synopsis: "Teen Miles Morales becomes the Spider-Man of his universe and must join with five spider-powered individuals from other dimensions to stop a threat for all realities.",
-            poster: "https://image.tmdb.org/t/p/w500/iiZZN643n6bg6ZD2iR1wN2Zg07q.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg"
         },
         {
             id: "everything-everywhere",
@@ -229,7 +315,7 @@ const seedDatabase = () => {
             runtime: 139,
             genres: ["Sci-Fi", "Comedy", "Action"],
             synopsis: "A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes and connecting with the lives she could have led.",
-            poster: "https://image.tmdb.org/t/p/w500/39wmItIWsg5sclfg2zZJZvHqhg0.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/u68AjlvlutfEIcpmbYpKcdi09ut.jpg"
         },
         {
             id: "dune-part-two",
@@ -240,7 +326,7 @@ const seedDatabase = () => {
             runtime: 166,
             genres: ["Sci-Fi", "Adventure"],
             synopsis: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-            poster: "https://image.tmdb.org/t/p/w500/czemb36gZ229292n38392ue5w2X.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg"
         },
         {
             id: "across-the-spider-verse",
@@ -251,7 +337,7 @@ const seedDatabase = () => {
             runtime: 140,
             genres: ["Animation", "Action", "Sci-Fi"],
             synopsis: "Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence. When the heroes clash on how to handle a new threat, Miles must redefine what it means to be a hero.",
-            poster: "https://image.tmdb.org/t/p/w500/8VtB7v9mCV1X61CF4m4jA0PsnUo.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg"
         },
         {
             id: "gladiator",
@@ -262,7 +348,7 @@ const seedDatabase = () => {
             runtime: 155,
             genres: ["Action", "Drama", "History"],
             synopsis: "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery.",
-            poster: "https://image.tmdb.org/t/p/w500/ty8hDCcc4gq52Bptmlm1bfz7n8c.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/wN2xWp1eIwCKOD0BHTcErTBv1Uq.jpg"
         },
         {
             id: "the-godfather",
@@ -273,7 +359,7 @@ const seedDatabase = () => {
             runtime: 175,
             genres: ["Crime", "Drama"],
             synopsis: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-            poster: "https://image.tmdb.org/t/p/w500/3bhkrj6UGV2pa6IKMBptwU2u6tc.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg"
         },
         {
             id: "lord-of-the-rings-1",
@@ -284,7 +370,7 @@ const seedDatabase = () => {
             runtime: 178,
             genres: ["Fantasy", "Adventure", "Action"],
             synopsis: "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth from the Dark Lord Sauron.",
-            poster: "https://image.tmdb.org/t/p/w500/6oom5QDNv285P5PFmMIkQIwEEAz.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg"
         },
         {
             id: "empire-strikes-back",
@@ -295,7 +381,7 @@ const seedDatabase = () => {
             runtime: 124,
             genres: ["Sci-Fi", "Adventure", "Action"],
             synopsis: "After the Rebels are brutally overpowered by the Empire on the ice planet Hoth, Luke Skywalker begins Jedi training with Yoda, while his friends are pursued by Darth Vader.",
-            poster: "https://image.tmdb.org/t/p/w500/nBesb4j1df7G2365Z52gIv6Hgbz.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/nNAeTmF4CtdSgMDplXTDPOpYzsX.jpg"
         },
         {
             id: "forrest-gump",
@@ -306,7 +392,7 @@ const seedDatabase = () => {
             runtime: 142,
             genres: ["Drama", "Romance"],
             synopsis: "The history of the United States from the 1950s to the 1970s unfolds from the perspective of an Alabama man with an IQ of 75, who yearns to be reunited with his childhood sweetheart.",
-            poster: "https://image.tmdb.org/t/p/w500/arw2vEZvH6UYie96vG879ftR5G3.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/Cw4hIUIAmSYfK9QfaUW5igp9La.jpg"
         },
         {
             id: "se7en",
@@ -317,7 +403,7 @@ const seedDatabase = () => {
             runtime: 127,
             genres: ["Crime", "Thriller", "Drama"],
             synopsis: "Two detectives, a rookie and a veteran, hunt a serial killer who uses the seven deadly sins as his motives.",
-            poster: "https://image.tmdb.org/t/p/w500/6yogwS6q7hBTH04yzwI6SQ14BhC.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg"
         },
         {
             id: "silence-of-the-lambs",
@@ -328,7 +414,7 @@ const seedDatabase = () => {
             runtime: 118,
             genres: ["Thriller", "Crime", "Drama"],
             synopsis: "A young F.B.I. cadet must receive the help of an incarcerated and manipulative cannibal killer to help catch another serial killer, a madman who skins his victims.",
-            poster: "https://image.tmdb.org/t/p/w500/uS1SkjV5rQIKx4q7nIQqH65G67y.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg"
         },
         {
             id: "goodfellas",
@@ -339,7 +425,7 @@ const seedDatabase = () => {
             runtime: 145,
             genres: ["Crime", "Drama"],
             synopsis: "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners Jimmy Conway and Tommy DeVito in the Italian-American crime syndicate.",
-            poster: "https://image.tmdb.org/t/p/w500/aKuFiU8tClGW5w4QLPMj4O4WV0g.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg"
         },
         {
             id: "saving-private-ryan",
@@ -350,7 +436,7 @@ const seedDatabase = () => {
             runtime: 169,
             genres: ["Drama", "War", "Action"],
             synopsis: "Following the Normandy Landings, a group of U.S. soldiers go behind enemy lines to retrieve a paratrooper whose brothers have been killed in action.",
-            poster: "https://image.tmdb.org/t/p/w500/uq41m461gW552E4YxVn197N86g5.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg"
         },
         {
             id: "schindlers-list",
@@ -361,7 +447,7 @@ const seedDatabase = () => {
             runtime: 195,
             genres: ["Drama", "History", "Biography"],
             synopsis: "In German-occupied Poland during World War II, industrialist Oskar Schindler gradually becomes concerned for his Jewish workforce after witnessing their persecution by the Nazis.",
-            poster: "https://image.tmdb.org/t/p/w500/sF1U4EUg0zKSRR42paT7F303h2t.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg"
         },
         {
             id: "psycho",
@@ -372,7 +458,7 @@ const seedDatabase = () => {
             runtime: 109,
             genres: ["Horror", "Thriller"],
             synopsis: "A Phoenix secretary embezzles $40,000 from her employer's client, goes on the run, and checks into a remote motel run by a young man under the domination of his mother.",
-            poster: "https://image.tmdb.org/t/p/w500/81d8oyEFgj7i436m57tfdDIH26B.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/yz4QVqPx3h1hD1DfqqQkCq3rmxW.jpg"
         },
         {
             id: "the-truman-show",
@@ -383,7 +469,7 @@ const seedDatabase = () => {
             runtime: 103,
             genres: ["Drama", "Comedy", "Sci-Fi"],
             synopsis: "An insurance salesman discovers his whole life is actually a reality TV show.",
-            poster: "https://image.tmdb.org/t/p/w500/ddZ368oSRox9e2r8J3jWnME9Z3o.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/vuza0WqY239yBXOadKlGwJsZJFE.jpg"
         },
         {
             id: "eternal-sunshine",
@@ -394,7 +480,7 @@ const seedDatabase = () => {
             runtime: 108,
             genres: ["Drama", "Romance", "Sci-Fi"],
             synopsis: "When their relationship turns sour, a young couple undergoes a medical procedure to have each other erased from their memories.",
-            poster: "https://image.tmdb.org/t/p/w500/5ywCwIL7LI77O5U4p99n57l4Pev.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/5MwkWH9tYHv3mV9OdYTMR5qreIz.jpg"
         },
         {
             id: "back-to-the-future",
@@ -405,7 +491,7 @@ const seedDatabase = () => {
             runtime: 116,
             genres: ["Sci-Fi", "Comedy", "Adventure"],
             synopsis: "Marty McFly, a 17-year-old high school student, is accidentally sent thirty years into the past in a time-traveling DeLorean invented by his close friend, the eccentric scientist Doc Brown.",
-            poster: "https://image.tmdb.org/t/p/w500/fNqz6fe2qw5HZnBvQY746guV5ph.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/vN5B5WgYscRGcQpVhHl6p9DDTP0.jpg"
         },
         {
             id: "the-departed",
@@ -416,7 +502,7 @@ const seedDatabase = () => {
             runtime: 151,
             genres: ["Crime", "Drama", "Thriller"],
             synopsis: "An undercover cop and a mole in the police attempt to identify each other while infiltrating an Irish gang in South Boston.",
-            poster: "https://image.tmdb.org/t/p/w500/3as8d15Z57eG9n87Gz3m5tW2tI0.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/nT97ifVT2J1yMQmeq20Qblg61T.jpg"
         },
         {
             id: "the-prestige",
@@ -427,7 +513,7 @@ const seedDatabase = () => {
             runtime: 130,
             genres: ["Drama", "Mystery", "Sci-Fi"],
             synopsis: "After a tragic accident, two stage magicians in 1890s London engage in a battle to create the ultimate illusion while sacrificing everything they have to outwit each other.",
-            poster: "https://image.tmdb.org/t/p/w500/bdN3gmg4626yBh6WMcb6z51558w.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
         },
         {
             id: "shutter-island",
@@ -438,7 +524,7 @@ const seedDatabase = () => {
             runtime: 138,
             genres: ["Mystery", "Thriller"],
             synopsis: "In 1954, a U.S. Marshal investigates the disappearance of a murderer who escaped from a hospital for the criminally insane.",
-            poster: "https://image.tmdb.org/t/p/w500/kve201g5zwm68t1v4mR1I4IRZ6Y.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg"
         },
         {
             id: "blade-runner-2049",
@@ -449,7 +535,7 @@ const seedDatabase = () => {
             runtime: 164,
             genres: ["Sci-Fi", "Mystery", "Thriller"],
             synopsis: "A new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
-            poster: "https://image.tmdb.org/t/p/w500/gGe540455B0x1lP4l45PeyLA4y4.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg"
         },
         {
             id: "oppenheimer",
@@ -460,7 +546,7 @@ const seedDatabase = () => {
             runtime: 180,
             genres: ["Drama", "Biography", "History"],
             synopsis: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-            poster: "https://image.tmdb.org/t/p/w500/8Gxv2wSbsysLYlhuxNx76vSqTRY.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
         },
         {
             id: "the-green-mile",
@@ -471,7 +557,7 @@ const seedDatabase = () => {
             runtime: 189,
             genres: ["Drama", "Fantasy"],
             synopsis: "A death row supervisor at a Louisiana penitentiary during the Great Depression discovers that one of his inmates, a giant black man accused of child murder and rape, possesses a miraculous gift.",
-            poster: "https://image.tmdb.org/t/p/w500/8HRug3C754162P2469490Pty7t6.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg"
         },
         {
             id: "inglourious-basterds",
@@ -482,7 +568,7 @@ const seedDatabase = () => {
             runtime: 153,
             genres: ["Action", "War", "Drama"],
             synopsis: "In Nazi-occupied France during World War II, a plan to assassinate Adolf Hitler by a group of Jewish U.S. soldiers coincides with a theatre owner's vengeful plans for the same.",
-            poster: "https://image.tmdb.org/t/p/w500/7sfb7hvtjxrIYTR26576bh065ch.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/7sfbEnaARXDDhKm0CZ7D7uc2sbo.jpg"
         },
         {
             id: "django-unchained",
@@ -493,7 +579,7 @@ const seedDatabase = () => {
             runtime: 165,
             genres: ["Drama", "Western"],
             synopsis: "With the assistance of a German bounty-hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.",
-            poster: "https://image.tmdb.org/t/p/w500/7oWYwz6H7SR5t7v7n55oUhqOIvi.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg"
         },
         {
             id: "no-country-for-old-men",
@@ -504,7 +590,7 @@ const seedDatabase = () => {
             runtime: 122,
             genres: ["Crime", "Thriller", "Drama"],
             synopsis: "A hunter stumbles upon a drug deal gone wrong and more than two million dollars in cash near the Rio Grande. His decision to take the money sparks a chain reaction of catastrophic violence.",
-            poster: "https://image.tmdb.org/t/p/w500/8yOH7T5u9fv24b5Pj433Z4Gg1yE.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/6d5XOczc226jECq0LIX0siKtgHR.jpg"
         },
         {
             id: "your-name",
@@ -515,7 +601,7 @@ const seedDatabase = () => {
             runtime: 106,
             genres: ["Animation", "Fantasy", "Romance"],
             synopsis: "Two strangers find themselves linked in a bizarre way. When a connection is formed, will distance be the only thing to keep them apart?",
-            poster: "https://image.tmdb.org/t/p/w500/q71tjeZ457584rYjuwHpvRkR3x0.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg"
         },
         {
             id: "alien",
@@ -526,7 +612,7 @@ const seedDatabase = () => {
             runtime: 117,
             genres: ["Sci-Fi", "Horror"],
             synopsis: "The crew of a commercial spacecraft encounter a deadly lifeform after investigating an unknown transmission.",
-            poster: "https://image.tmdb.org/t/p/w500/vfrQ06X3GUGvNu4Rh74a445n5Gt.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg"
         },
         {
             id: "la-la-land",
@@ -537,7 +623,7 @@ const seedDatabase = () => {
             runtime: 128,
             genres: ["Romance", "Music", "Comedy"],
             synopsis: "While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.",
-            poster: "https://image.tmdb.org/t/p/w500/uDO8zWDhfNsPkNyFI0hm3xxPk6g.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg"
         },
         {
             id: "joker",
@@ -548,7 +634,7 @@ const seedDatabase = () => {
             runtime: 122,
             genres: ["Crime", "Drama", "Thriller"],
             synopsis: "During the 1980s, a failed stand-up comedian goes mad and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic vigilante figure.",
-            poster: "https://image.tmdb.org/t/p/w500/udDclsnH3wFS6r7zA7alUPyN2aB.jpg"
+            poster: "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg"
         }
     ];
 
