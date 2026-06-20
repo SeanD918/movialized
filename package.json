@@ -2,14 +2,11 @@
   "name": "movialized-root",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "client"
-  ],
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^5.2.1"
   },
   "scripts": {
-    "build": "npm run build --workspace=client"
+    "build": "cd client && npm install --no-package-lock && npm run build"
   }
 }
