@@ -6,9 +6,7 @@ const http = require('http');
 // Load environment variables
 require('dotenv').config();
 
-const DB_PATH = process.env.VERCEL
-    ? '/tmp/data.json'
-    : path.join(__dirname, 'data.json');
+const DB_PATH = path.join(__dirname, 'data.json');
 const apiKey = process.env.TMDB_API_KEY;
 
 const movieTitles = [

@@ -4,28 +4,25 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = process.env.VERCEL
-    ? '/tmp/data.json'
-    : path.join(__dirname, 'data.json');
-
-// Copy original database template to /tmp on Vercel for write operations
-if (process.env.VERCEL) {
-    if (!fs.existsSync(DB_PATH)) {
-        try {
-            const initialData = require('./data.json');
-            fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf8');
-            console.log('Copied database to /tmp for Vercel execution.');
-        } catch (err) {
-            console.error('Failed to copy database to /tmp:', err);
+const DB_PATH = (() => {
+    if (process.env.VERCEL === '1') {
+        const tempPath = path.join('/tmp', 'data.json');
+        const templatePath = path.join(__dirname, 'data.json');
+        if (!fs.existsSync(tempPath)) {
             try {
-                fs.writeFileSync(DB_PATH, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2), 'utf8');
-                console.log('Initialized empty database in /tmp after fallback.');
-            } catch (writeErr) {
-                console.error('Failed to write empty database:', writeErr);
+                if (fs.existsSync(templatePath)) {
+                    fs.copyFileSync(templatePath, tempPath);
+                } else {
+                    fs.writeFileSync(tempPath, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2));
+                }
+            } catch (err) {
+                console.error("Failed to copy database to /tmp:", err);
             }
         }
+        return tempPath;
     }
-}
+    return path.join(__dirname, 'data.json');
+})();
 
 // Custom CORS middleware to avoid external npm dependency
 app.use((req, res, next) => {
@@ -1357,7 +1354,7 @@ app.get('/', (req, res) => {
     res.json({ status: "running", api: "/api", app: "Movialized Movie Platform" });
 });
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });
