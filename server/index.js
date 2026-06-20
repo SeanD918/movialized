@@ -1349,6 +1349,17 @@ app.put('/api/profile', (req, res) => {
     }
 });
 
+// Debug API fallback route
+app.use('/api/*', (req, res) => {
+    res.json({
+        msg: "Fallback debug route inside Express",
+        url: req.url,
+        originalUrl: req.originalUrl,
+        path: req.path,
+        headers: req.headers
+    });
+});
+
 // Default server status route
 app.get('/', (req, res) => {
     res.json({ status: "running", api: "/api", app: "Movialized Movie Platform" });
