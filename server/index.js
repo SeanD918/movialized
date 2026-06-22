@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const DB_PATH = (() => {
     if (process.env.VERCEL === '1') {
         const tempPath = path.join('/tmp', 'data.json');
-        const templatePath = path.join(process.cwd(), 'server', 'data.json');
+        const templatePath = path.join(__dirname, 'data.json');
         if (!fs.existsSync(tempPath)) {
             try {
                 if (fs.existsSync(templatePath)) {
