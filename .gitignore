@@ -14,7 +14,7 @@ server/.env
 server/.env.local
 
 # Databases and dynamic data
-server/data.json
+# server/data.json
 server/data.json.tmp
 server/data.json.corrupt-*
 
