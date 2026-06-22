@@ -1,3 +1,1 @@
-const app = require('../../server/index.js');
-
-module.exports = app;
+// Deprecated. Cleaned up in favor of index.js.
