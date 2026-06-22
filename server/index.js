@@ -24,6 +24,11 @@ const DB_PATH = (() => {
     return path.join(__dirname, 'data.json');
 })();
 
+// Force Vercel to bundle the database file
+if (false) {
+    fs.readFileSync(path.join(__dirname, 'data.json'));
+}
+
 // Custom CORS middleware to avoid external npm dependency
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
