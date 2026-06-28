@@ -279,10 +279,19 @@ function App() {
       const hash = window.location.hash.replace('#', '');
       if (hash === 'admin') {
         setActiveTab('admin');
-      } else if (['dashboard', 'discover', 'diary', 'lists'].includes(hash)) {
+      } else if (hash === 'dashboard') {
+        if (currentUser) {
+          setActiveTab('dashboard');
+        } else {
+          setActiveTab('discover');
+          window.location.hash = 'discover';
+        }
+      } else if (['discover', 'diary', 'lists'].includes(hash)) {
         setActiveTab(hash);
       } else {
-        setActiveTab('discover'); // fallback
+        const defaultTab = currentUser ? 'dashboard' : 'discover';
+        setActiveTab(defaultTab);
+        window.location.hash = defaultTab;
       }
     };
 
@@ -375,6 +384,9 @@ function App() {
       if (authRedirectAction) {
         setTimeout(() => authRedirectAction(data), 100);
         setAuthRedirectAction(null);
+      } else {
+        setActiveTab('dashboard');
+        window.location.hash = 'dashboard';
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -389,8 +401,8 @@ function App() {
     } catch (err) {
       console.warn('Storage remove blocked:', err);
     }
-    setActiveTab('dashboard');
-    window.location.hash = 'dashboard';
+    setActiveTab('discover');
+    window.location.hash = 'discover';
     refreshData();
   };
 
@@ -2192,7 +2204,7 @@ function App() {
       {/* Top Navigation Bar */}
       <header className={`topnav ${navScrolled ? 'scrolled' : ''}`}>
         {/* Logo */}
-        <div className="logo-container" onClick={() => window.location.hash = 'dashboard'} style={{ cursor: 'pointer' }}>
+        <div className="logo-container" onClick={() => window.location.hash = currentUser ? 'dashboard' : 'discover'} style={{ cursor: 'pointer' }}>
           <div className="logo-icon">
             <Film size={18} fill="white" />
           </div>
@@ -2209,12 +2221,14 @@ function App() {
 
         {/* Center Nav Links */}
         <nav className={`topnav-links ${isMobileMenuOpen ? 'open' : ''}`}>
-          <button
-            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => { window.location.hash = 'dashboard'; setIsMobileMenuOpen(false); }}
-          >
-            <BarChart3 size={16} /> Dashboard
-          </button>
+          {currentUser && (
+            <button
+              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => { window.location.hash = 'dashboard'; setIsMobileMenuOpen(false); }}
+            >
+              <BarChart3 size={16} /> Dashboard
+            </button>
+          )}
           <button
             className={`nav-item ${activeTab === 'discover' ? 'active' : ''}`}
             onClick={() => { window.location.hash = 'discover'; setIsMobileMenuOpen(false); }}
