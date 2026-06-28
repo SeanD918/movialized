@@ -22,7 +22,8 @@ import {
   Lock,
   Unlock,
   CheckCircle2,
-  Menu
+  Menu,
+  BookOpen
 } from 'lucide-react';
 import './App.css';
 
@@ -225,6 +226,7 @@ function App() {
   const [newMovieGenres, setNewMovieGenres] = useState('');
   const [newMovieSynopsis, setNewMovieSynopsis] = useState('');
   const [newMoviePoster, setNewMoviePoster] = useState('');
+  const [newMovieBasedOnBook, setNewMovieBasedOnBook] = useState(false);
   const [addMovieError, setAddMovieError] = useState('');
   const [addMovieSuccess, setAddMovieSuccess] = useState(false);
 
@@ -305,8 +307,8 @@ function App() {
       });
     }, {
       root: mainEl,              // scroll root is the main panel, not the viewport
-      threshold: 0.06,
-      rootMargin: '0px 0px -40px 0px'
+      threshold: 0.01,           // trigger immediately on entering
+      rootMargin: '0px 0px 200px 0px' // reveal elements 200px before they scroll into view
     });
 
     // Assign stagger delays to sibling .reveal groups
@@ -318,7 +320,8 @@ function App() {
         siblingIndex = 0;
         lastParent = el.parentElement;
       }
-      el.style.transitionDelay = `${siblingIndex * 80}ms`;
+      // Use a modulo to limit stagger delay to a maximum of 360ms
+      el.style.transitionDelay = `${(siblingIndex % 10) * 40}ms`;
       siblingIndex++;
       observer.observe(el);
     });
@@ -692,7 +695,8 @@ function App() {
       runtime: parseInt(newMovieRuntime),
       genres: newMovieGenres,
       synopsis: newMovieSynopsis,
-      poster: newMoviePoster
+      poster: newMoviePoster,
+      basedOnBook: newMovieBasedOnBook
     };
 
     try {
@@ -713,6 +717,7 @@ function App() {
         setNewMovieGenres('');
         setNewMovieSynopsis('');
         setNewMoviePoster('');
+        setNewMovieBasedOnBook(false);
         setAddMovieSuccess(true);
         refreshData();
       } else {
@@ -1583,6 +1588,94 @@ function App() {
             {movies.map((movie, idx) => {
               const watchlist = customLists.find(l => l.id === 'watchlist' || l.id === `watchlist-${currentUser?.id}` || l.name.toLowerCase() === 'watchlist');
               const isOnWatchlist = watchlist?.movieIds.includes(movie.id);
+              const isBasedOnBook = movie.basedOnBook || 
+                new Set([
+                  'the-shawshank-redemption',
+                  'fight-club',
+                  'dune-part-two',
+                  'dune-part-three',
+                  'the-godfather',
+                  'lord-of-the-rings-1',
+                  'forrest-gump',
+                  'silence-of-the-lambs',
+                  'goodfellas',
+                  'schindlers-list',
+                  'psycho',
+                  'the-prestige',
+                  'shutter-island',
+                  'blade-runner-2049',
+                  'oppenheimer',
+                  'the-green-mile',
+                  'no-country-for-old-men',
+                  'the-housemaid',
+                  'animal-farm'
+                ]).has(movie.id) ||
+                (movie.synopsis && (
+                  movie.synopsis.toLowerCase().includes('based on the novel') || 
+                  movie.synopsis.toLowerCase().includes('based on the book') ||
+                  movie.synopsis.toLowerCase().includes('adaptation of')
+                ));
+
+              if (isBasedOnBook) {
+                return (
+                  <div
+                    key={movie.id}
+                    className="movie-card book-card reveal-pop"
+                    style={{ transitionDelay: `${(idx % 10) * 60}ms` }}
+                    onClick={() => openMovieDetails(movie.id)}
+                  >
+                    <div className="book-container">
+                      <div className="book-spine"></div>
+                      <div className="book-pages" onClick={e => e.stopPropagation()}>
+                        <div className="book-badge">
+                          <BookOpen size={10} /> Based on Book
+                        </div>
+                        <p className="book-synopsis">
+                          {movie.synopsis || "A remarkable film adaptation of the classic literature."}
+                        </p>
+                        <div className="book-actions">
+                          <button className="quick-log-btn" onClick={() => requireAuth(() => startNewLog(movie))}>
+                            <Play size={10} fill="white" /> Log Watch
+                          </button>
+                          <button 
+                            className="quick-log-btn" 
+                            style={{ 
+                              background: isOnWatchlist ? 'rgba(144, 97, 249, 0.2)' : 'rgba(255,255,255,0.1)',
+                              border: '1px solid rgba(255,255,255,0.1)'
+                            }} 
+                            onClick={() => requireAuth(() => handleToggleWatchlist(movie.id))}
+                          >
+                            {isOnWatchlist ? <><Check size={10} /> Watchlist</> : <><Bookmark size={10} /> Watchlist</>}
+                          </button>
+                        </div>
+                        <div className="book-page-meta">
+                          {movie.runtime} min • {movie.year}
+                        </div>
+                      </div>
+
+                      <div className="book-cover">
+                        <SafeImage 
+                          src={movie.poster} 
+                          alt={movie.title} 
+                          className="movie-poster-img"
+                          fallbackTitle={movie.title}
+                          fallbackYear={movie.year}
+                        />
+                        <div className="movie-card-overlay" onClick={e => e.stopPropagation()}>
+                          <span className="book-badge" style={{ position: 'absolute', top: '10px', left: '10px', background: 'var(--bg-primary)', zIndex: 10, border: '1px solid rgba(144, 97, 249, 0.4)' }}>
+                            <BookOpen size={10} /> Book Adapt
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <h4 className="movie-title">{movie.title}</h4>
+                    <div className="movie-meta">
+                      <span>{movie.year}</span>
+                      <span>{movie.runtime} min</span>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -2033,6 +2126,19 @@ function App() {
                   onChange={e => setNewMovieSynopsis(e.target.value)}
                   placeholder="Brief movie plot outline..."
                 />
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '1rem 0 1.5rem 0' }}>
+                <input
+                  type="checkbox"
+                  id="newMovieBasedOnBook"
+                  checked={newMovieBasedOnBook}
+                  onChange={e => setNewMovieBasedOnBook(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <label htmlFor="newMovieBasedOnBook" className="form-label" style={{ margin: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                  <BookOpen size={14} style={{ color: 'var(--text-secondary)' }} /> Based on a Book (activates 3D Flip Book animation on hover)
+                </label>
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem' }}>
