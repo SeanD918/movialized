@@ -7,13 +7,30 @@ const PORT = process.env.PORT || 3000;
 const DB_PATH = (() => {
     if (process.env.VERCEL === '1') {
         const tempPath = path.join('/tmp', 'data.json');
-        const templatePath = path.join(__dirname, 'data.json');
+        const pathsToTry = [
+            path.join(__dirname, 'data.json'),
+            path.join(__dirname, '..', 'server', 'data.json'),
+            path.join(__dirname, '..', '..', 'server', 'data.json'),
+            path.join(process.cwd(), 'server', 'data.json')
+        ];
+        let templatePath = null;
+        for (const p of pathsToTry) {
+            if (fs.existsSync(p)) {
+                templatePath = p;
+                break;
+            }
+        }
         if (!fs.existsSync(tempPath)) {
             try {
-                if (fs.existsSync(templatePath)) {
+                if (templatePath) {
                     fs.copyFileSync(templatePath, tempPath);
                 } else {
-                    fs.writeFileSync(tempPath, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2));
+                    const fallbackPath = path.join(process.cwd(), 'server', 'data.json');
+                    if (fs.existsSync(fallbackPath)) {
+                        fs.copyFileSync(fallbackPath, tempPath);
+                    } else {
+                        fs.writeFileSync(tempPath, JSON.stringify({ movies: [], logs: [], lists: [], profile: {}, users: [] }, null, 2));
+                    }
                 }
             } catch (err) {
                 console.error("Failed to copy database to /tmp:", err);
@@ -21,12 +38,23 @@ const DB_PATH = (() => {
         }
         return tempPath;
     }
+    const localPaths = [
+        path.join(__dirname, 'data.json'),
+        path.join(__dirname, '..', 'server', 'data.json'),
+        path.join(__dirname, '..', '..', 'server', 'data.json')
+    ];
+    for (const p of localPaths) {
+        if (fs.existsSync(p)) {
+            return p;
+        }
+    }
     return path.join(__dirname, 'data.json');
 })();
 
 // Force Vercel to bundle the database file
 if (false) {
     fs.readFileSync(path.join(__dirname, 'data.json'));
+    fs.readFileSync(path.join(__dirname, '..', 'server', 'data.json'));
 }
 
 // Custom CORS middleware to avoid external npm dependency
