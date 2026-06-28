@@ -279,15 +279,15 @@ function App() {
       const hash = window.location.hash.replace('#', '');
       if (hash === 'admin') {
         setActiveTab('admin');
-      } else if (hash === 'dashboard') {
+      } else if (['dashboard', 'diary', 'lists'].includes(hash)) {
         if (currentUser) {
-          setActiveTab('dashboard');
+          setActiveTab(hash);
         } else {
           setActiveTab('discover');
           window.location.hash = 'discover';
         }
-      } else if (['discover', 'diary', 'lists'].includes(hash)) {
-        setActiveTab(hash);
+      } else if (hash === 'discover') {
+        setActiveTab('discover');
       } else {
         const defaultTab = currentUser ? 'dashboard' : 'discover';
         setActiveTab(defaultTab);
@@ -2235,18 +2235,22 @@ function App() {
           >
             <Film size={16} /> Discover
           </button>
-          <button
-            className={`nav-item ${activeTab === 'diary' ? 'active' : ''}`}
-            onClick={() => { window.location.hash = 'diary'; setIsMobileMenuOpen(false); }}
-          >
-            <Calendar size={16} /> Diary Log
-          </button>
-          <button
-            className={`nav-item ${activeTab === 'lists' ? 'active' : ''}`}
-            onClick={() => { window.location.hash = 'lists'; setIsMobileMenuOpen(false); }}
-          >
-            <List size={16} /> My Lists
-          </button>
+          {currentUser && (
+            <>
+              <button
+                className={`nav-item ${activeTab === 'diary' ? 'active' : ''}`}
+                onClick={() => { window.location.hash = 'diary'; setIsMobileMenuOpen(false); }}
+              >
+                <Calendar size={16} /> Diary Log
+              </button>
+              <button
+                className={`nav-item ${activeTab === 'lists' ? 'active' : ''}`}
+                onClick={() => { window.location.hash = 'lists'; setIsMobileMenuOpen(false); }}
+              >
+                <List size={16} /> My Lists
+              </button>
+            </>
+          )}
         </nav>
 
         {/* Right Side: Profile / Auth */}
