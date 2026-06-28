@@ -12,10 +12,6 @@ client/dist/
 .env.production.local
 server/.env
 server/.env.local
-**/.env*
-
-# Hide client/api folder
-client/api/
 
 # Databases and dynamic data
 # server/data.json
