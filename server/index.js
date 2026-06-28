@@ -875,7 +875,7 @@ app.get('/api/movies', (req, res) => {
 // 2. Add a new custom movie
 app.post('/api/movies', (req, res) => {
     const db = readDB();
-    const { title, director, cast, year, runtime, genres, synopsis, poster } = req.body;
+    const { title, director, cast, year, runtime, genres, synopsis, poster, basedOnBook } = req.body;
 
     if (!title || !director || !year || !runtime) {
         return res.status(400).json({ error: "Missing required movie fields: title, director, year, runtime" });
@@ -901,7 +901,8 @@ app.post('/api/movies', (req, res) => {
         runtime: parseInt(runtime),
         genres: Array.isArray(genres) ? genres : genres ? genres.split(',').map(g => g.trim()) : [],
         synopsis: synopsis || "",
-        poster: poster || ""
+        poster: poster || "",
+        basedOnBook: !!basedOnBook
     };
 
     db.movies.unshift(newMovie);
